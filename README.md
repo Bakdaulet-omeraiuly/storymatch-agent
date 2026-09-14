@@ -78,6 +78,9 @@ once verification clears -- that's what the hackathon rubric rewards.
 - **`cli_demo.py`** -- terminal fallback, including a `--scripted` mode
   that replays the doc's example conversation unattended (recorded backup
   in case venue wifi or Bedrock hiccups during the live demo).
+- **`tests/`** -- pytest suite for everything that doesn't need a live
+  model (schema integrity, exclusion logic, ranking, diversity, hidden gem
+  mode, agent wiring). Run with `python -m pytest tests/ -q`.
 
 ## Verified beyond the base loop
 
@@ -101,13 +104,24 @@ instructions in `agent.py`'s `SYSTEM_PROMPT` cover them:
   `search_movies` calls on its own before presenting results, rather than
   forcing a bad top-5. This is the strongest "this is actually an agent,
   not a wrapper" evidence -- see the case-file artifact's Exhibit C/D.
+- **Story mutation** -- asked to keep the same setup "but make it sci-fi
+  instead of zombies," the agent separated narrative *mechanics* (small
+  group, psychological tension, turning on each other, slow pacing --
+  kept) from surface *dressing* (zombies/post-apocalyptic -- dropped),
+  said so explicitly (`DROPPED: zombies... KEPT: small group...`), and
+  re-ranked with a genuine sci-fi title (*Cube*) on top instead of a
+  zombie film with the label changed.
+
+Built with actual code (not just prompt behavior): **Hidden Gem Mode** --
+`search_movies(..., prioritize_hidden_gems=True)` nudges ranking toward
+low-popularity titles with comparable narrative fit, mirroring the doc's
+ranking formula giving popularity a deliberately small weight. Verified in
+`tests/test_dataset.py`.
 
 ## What's deliberately NOT built yet (stretch, section 27 of the doc)
 
 Cut for time -- add only if the MVP demo is solid and there are hours left:
 
-- Hidden Gem / popularity-vs-narrative-fit slider -- `popularity` is on
-  every movie record but not yet used in ranking.
 - **Bedrock AgentCore Memory** -- `storymatch/agentcore_memory.py` has a
   documented sketch (setup steps, what to implement) but it's
   `NotImplementedError` by design: it was written while Bedrock access was

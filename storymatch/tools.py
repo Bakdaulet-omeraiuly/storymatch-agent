@@ -38,6 +38,7 @@ def search_movies(
     required_elements: Optional[List[str]] = None,
     avoid_elements: Optional[List[str]] = None,
     top_n: int = 5,
+    prioritize_hidden_gems: bool = False,
 ) -> dict:
     """Search the movie corpus using a structured Narrative Fingerprint.
 
@@ -63,6 +64,7 @@ def search_movies(
         required_elements: Tags that MUST be present (hard requirement, heavily weighted).
         avoid_elements: Tags that MUST NOT be present (e.g. ["happy ending", "comedy"]) -- movies hitting these are excluded entirely, not just down-ranked.
         top_n: How many ranked results to return (default 5).
+        prioritize_hidden_gems: Set True only when the user asks to ignore popularity or explicitly wants an obscure/underrated pick -- nudges ranking toward narrative fit over fame instead of the default balance.
     """
     results = dataset.search(
         setting=setting,
@@ -76,6 +78,7 @@ def search_movies(
         required_elements=required_elements,
         avoid_elements=avoid_elements,
         top_n=top_n,
+        prioritize_hidden_gems=prioritize_hidden_gems,
     )
     return {"count": len(results), "candidates": results}
 

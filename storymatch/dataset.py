@@ -225,18 +225,38 @@ def score_movie(
     }
 
 
+# Hidden Gem Mode: a small popularity nudge, not a popularity filter.
+# Mirrors the research doc's ranking formula giving popularity a deliberately
+# minor (~5-10%) weight -- narrative fit still dominates, this only breaks
+# ties in favor of the less-famous title.
+_HIDDEN_GEM_ADJUSTMENT = {"high": -8, "medium": 0, "low": 8}
+
+
 def search(
     *,
     top_n: int = 8,
     diversify: bool = True,
+    prioritize_hidden_gems: bool = False,
     **fingerprint_kwargs: Any,
 ) -> list[dict[str, Any]]:
     """
     Stage 1-4 in one call: broad retrieval + hard-avoid filtering +
     narrative scoring + diversity-aware ranking.
+
+    prioritize_hidden_gems: when True, nudges scores so obscure titles with
+    a comparable narrative fit outrank famous ones instead of ties going to
+    whichever the model saw more of in training (doc's "Hidden Gem Mode").
     """
     scored = [score_movie(m, **fingerprint_kwargs) for m in load_movies()]
     candidates = [s for s in scored if not s["excluded"]]
+
+    if prioritize_hidden_gems:
+        for c in candidates:
+            adjustment = _HIDDEN_GEM_ADJUSTMENT.get(c["popularity"], 0)
+            c["overall_score"] = max(0, min(100, c["overall_score"] + adjustment))
+            if c["popularity"] == "low":
+                c["hidden_gem"] = True
+
     candidates.sort(key=lambda s: s["overall_score"], reverse=True)
 
     if not diversify or len(candidates) <= top_n:
