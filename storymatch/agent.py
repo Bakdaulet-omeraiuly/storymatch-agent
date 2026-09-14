@@ -129,7 +129,7 @@ def _resolve_model():
     while AWS Bedrock model access/billing is still being sorted out. Swap
     back to "bedrock" (or unset it) for the actual submission.
     """
-    provider = os.environ.get("STORYMATCH_MODEL_PROVIDER", "bedrock").lower()
+    provider = os.environ.get("STORYMATCH_MODEL_PROVIDER", "anthropic").lower()
 
     if provider == "anthropic":
         from strands.models.anthropic import AnthropicModel
